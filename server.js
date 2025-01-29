@@ -1,13 +1,12 @@
 
 
-
 const express = require("express");
 const cors = require("cors");
-const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 require("dotenv").config();
 
 const authRoutes = require("./routes/authRoutes");
+const userRoutes = require("./routes/userRoutes"); // User registration & management
 
 // Import API Routes
 const reportRoutes = require("./routes/reportRoutes");
@@ -22,9 +21,10 @@ const PORT = process.env.PORT || 5001;
 
 //  Middleware
 app.use(cors());
-app.use(bodyParser.json());
+app.use(express.json()); // Use built-in Express JSON parser
 
-//  Register Routes (Place Here)
+//  Register Routes
+app.use("/users", userRoutes);
 app.use("/auth", authRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/comments", commentRoutes);
@@ -40,10 +40,12 @@ app.get("/", (req, res) => {
 
 //  MongoDB Connection
 mongoose
-  .connect(process.env.MONGO_URI)
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.error("Database connection error:", err));
 
-//  Start Server (Keep at the Bottom)
+//  Start Server
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
