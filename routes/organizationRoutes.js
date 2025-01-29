@@ -13,10 +13,10 @@ router.post("/create", async (req, res) => {
         const { name, description, departments, subscriptionTier } = req.body;
 
         // Check if organization already exists
-const existingOrg = await Organization.findOne({ name });
-if (existingOrg) {
-    return res.status(400).json({ error: "Organization with this name already exists." });
-}
+        const existingOrg = await Organization.findOne({ name });
+        if (existingOrg) {
+            return res.status(400).json({ error: "Organization with this name already exists." });
+        }
 
         const organization = new Organization({
             name,
@@ -26,10 +26,9 @@ if (existingOrg) {
         });
         await organization.save();
 
-
-        res.status(201).json({ 
+        res.status(201).json({
             message: "Organization created successfully. Proceed to add an admin.",
-            organizationId: organization._id 
+            organizationId: organization._id
         });
     } catch (err) {
         console.error("❌ Error in /create:", err);
@@ -64,7 +63,7 @@ router.post("/add-admin", async (req, res) => {
         organization.admin = adminUser._id;
         await organization.save();
 
-        res.status(201).json({ 
+        res.status(201).json({
             message: "Admin user created and linked to organization successfully.",
             adminId: adminUser._id
         });
@@ -95,5 +94,70 @@ router.post("/finalize", async (req, res) => {
     }
 });
 
+// GET all organizations
+router.get("/", async (req, res) => {
+    try {
+        const organizations = await Organization.find();
+        res.status(200).json(organizations);
+    } catch (err) {
+        console.error("❌ Error in GET /organizations:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// GET a specific organization by ID
+router.get("/:id", async (req, res) => {
+    try {
+        const organization = await Organization.findById(req.params.id);
+        if (!organization) {
+            return res.status(404).json({ error: "Organization not found" });
+        }
+        res.status(200).json(organization);
+    } catch (err) {
+        console.error("❌ Error in GET /organizations/:id:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Update Organization
+router.put("/:id", async (req, res) => {
+    try {
+        const updatedOrganization = await Organization.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedOrganization) {
+            return res.status(404).json({ error: "Organization not found" });
+        }
+
+        res.status(200).json({
+            message: "Organization updated successfully.",
+            organization: updatedOrganization,
+        });
+    } catch (error) {
+        console.error("❌ Error in PUT /organizations/:id:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Delete Organization
+router.delete("/:id", async (req, res) => {
+    try {
+        const deletedOrganization = await Organization.findByIdAndDelete(req.params.id);
+        if (!deletedOrganization) {
+            return res.status(404).json({ error: "Organization not found" });
+        }
+
+        res.status(200).json({ message: "Organization deleted successfully." });
+    } catch (error) {
+        console.error("❌ Error in DELETE /organizations/:id:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 module.exports = router;
+
+
 
